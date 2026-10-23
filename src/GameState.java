@@ -47,9 +47,9 @@ public class GameState {
     public void updateFEN() {
         char[] moves = history.getLast().toCharArray();
         int destFileInx = (moves[2] - 'a');
-        int destRankInx = 8 - (moves[3] - '0');
+        int destRankInx = (moves[3] - '1');
         int origFileInx = (moves[0] - 'a');
-        int origRankInx = 8 - (moves[1] - '0');
+        int origRankInx = (moves[1] - '1');
 
         char[][] boardRep = FENUtils.parseBoard(this.board);
         char piece = this.lastPiece;

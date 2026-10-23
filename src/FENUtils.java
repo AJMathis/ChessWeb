@@ -10,10 +10,10 @@ public class FENUtils {
             for (char pce : ranks[i].toCharArray()) {
                 if (Character.isDigit(pce)) {
                     for (int k = 0; k < (pce - '0'); k++) {
-                        board[j++][i] = '.';
+                        board[j++][7-i] = '.';
                     }
                 } else {
-                    board[j++][i] = pce;
+                    board[j++][7-i] = pce;
                 }
             }
         }
@@ -23,7 +23,7 @@ public class FENUtils {
     public static String fenBoard(char[][] board) {
         ArrayList<String> fenBoard = new ArrayList<>();
         int empty = 0;
-        for (int rank = 0; rank < 8; rank++) {
+        for (int rank = 7; rank >= 0; rank--) {
             for (int file = 0; file < 8; file++) {
                 if (board[file][rank] == '.') empty++;
                 else {
