@@ -45,8 +45,4 @@ public class FENUtils {
 
     }
 
-    public static String exportFEN(Framework framework, char turn, String castling, String enPassant,
-        int halfMoves, int fullMoves) {
-
-    }
 }

@@ -19,13 +19,13 @@ public class Move {
     public char getColor() {return color;}
 
     public int getIntPiece() {
-        return switch (piece) {
-            case 'p'|'P' -> 0;
-            case 'n'|'N' -> 1;
-            case 'b'|'B' -> 2;
-            case 'r'|'R' -> 3;
-            case 'q'|'Q' -> 4;
-            case 'k'|'K' -> 5;
+        return switch (Character.toLowerCase(piece)) {
+            case 'p' -> 0;
+            case 'n' -> 1;
+            case 'b' -> 2;
+            case 'r' -> 3;
+            case 'q' -> 4;
+            case 'k' -> 5;
             default -> -1;
         };
     }

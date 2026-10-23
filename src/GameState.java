@@ -1,6 +1,9 @@
+import java.awt.*;
 import java.util.ArrayList;
 
 public class GameState {
+    Framework framework;
+
     ArrayList<String> history;
     char lastPiece;
     String board;
@@ -11,6 +14,7 @@ public class GameState {
     int fullMoves;
 
     public GameState() {
+        framework = new Framework();
         this.board = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
         this.turn = 'w';
         this.castling = "KQkq";
@@ -30,28 +34,29 @@ public class GameState {
     public ArrayList<String> getHistory() {return history;}
 
     public void addMove(Move move) {
-        if(!confirmValidMove(move)) {
+        if(!framework.isValidMove(move)) {
             throw new IllegalArgumentException("NOT A VALID MOVE");
-        };
+        }
         this.history.add(move.getOrigin() + move.getDestination());
         this.turn = this.turn == 'w' ? 'b' : 'w';
         this.lastPiece = move.getPiece();
+        framework.makeMove(move);
         updateFEN();
     }
 
     public void updateFEN() {
         char[] moves = history.getLast().toCharArray();
-        int destFileIndx = (moves[2] - 'a');
-        int destRankIndx = 8 - (moves[3] - '0');
-        int origFileIndx = (moves[0] - 'a');
-        int origRankIndx = 8 - (moves[1] - '0');
+        int destFileInx = (moves[2] - 'a');
+        int destRankInx = 8 - (moves[3] - '0');
+        int origFileInx = (moves[0] - 'a');
+        int origRankInx = 8 - (moves[1] - '0');
 
         char[][] boardRep = FENUtils.parseBoard(this.board);
         char piece = this.lastPiece;
-        boolean capture = boardRep[destFileIndx][destRankIndx] != '.';
+        boolean capture = boardRep[destFileInx][destRankInx] != '.';
 
-        boardRep[origFileIndx][origRankIndx] = '.';
-        boardRep[destFileIndx][destRankIndx] = piece;
+        boardRep[origFileInx][origRankInx] = '.';
+        boardRep[destFileInx][destRankInx] = piece;
         this.board = FENUtils.fenBoard(boardRep);
 
         String castling = this.castling;
@@ -72,8 +77,8 @@ public class GameState {
         }
 
         String enPassant = "-";
-        if(piece == 'P' && moves[1] == '2' && moves[3] == '4') enPassant = (String.valueOf(moves[0]) + "3");
-        else if(piece == 'p' && moves[1] == '7' && moves[3] == '5') enPassant = (String.valueOf(moves[0]) + "6");
+        if(piece == 'P' && moves[1] == '2' && moves[3] == '4') enPassant = (moves[0] + "3");
+        else if(piece == 'p' && moves[1] == '7' && moves[3] == '5') enPassant = (moves[0] + "6");
         this.enPassant = enPassant;
 
         int halfMove = this.halfMoves;
@@ -86,23 +91,4 @@ public class GameState {
         this.fullMoves = fullMove;
     }
 
-    public boolean confirmValidMove(Move move) {
-        boolean validMove = true;
-        char piece = move.getPiece();
-        char[] origin = move.getOrigin().toCharArray();
-        char[] dest = move.getDestination().toCharArray();
-
-        char[][] board = FENUtils.parseBoard(this.board);
-
-        if (origin[0] < 'a' || origin[0] > 'h' ||
-                origin[1] < '1' || origin[1] > '8') {
-            validMove = false;
-        }
-        if (dest[0] < 'a' || dest[0] > 'h' ||
-                dest[1] < '1' || dest[1] > '8') {
-            validMove = false;
-        }
-        if(board[origin[0] - 'a'][8-(origin[1]-'0')] != piece) validMove = false;
-        return validMove;
-    }
 }
