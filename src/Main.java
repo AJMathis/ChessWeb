@@ -7,7 +7,7 @@ public class Main {
         System.out.println(state.getFEN());
         System.out.println(state.getFEN().equals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
 
-        state.addMove(new Move('P', "e2", "e4"));
+        state.addMove(new Move('P', "e2", "e4", 'w'));
 
         System.out.println(state.getFEN());
         System.out.println(state.getFEN().equals("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"));

@@ -23,21 +23,8 @@ public class GameState {
     public int getTurn() {return turn;}
 
     public String getFEN() {
-        StringBuilder str = new StringBuilder();
-
-        str.append(this.board);
-        str.append(" ");
-        str.append(this.turn);
-        str.append(" ");
-        str.append(this.castling);
-        str.append(" ");
-        str.append(this.enPassant);
-        str.append(" ");
-        str.append(this.halfMoves);
-        str.append(" ");
-        str.append(this.fullMoves);
-
-        return str.toString();
+        return this.board + " " + this.turn + " " + this.castling + " " +
+                this.enPassant + " " + this.halfMoves + " " + this.fullMoves;
     }
 
     public ArrayList<String> getHistory() {return history;}
@@ -59,13 +46,13 @@ public class GameState {
         int origFileIndx = (moves[0] - 'a');
         int origRankIndx = 8 - (moves[1] - '0');
 
-        char[][] boardRep = parseBoard(this.board);
+        char[][] boardRep = FENUtils.parseBoard(this.board);
         char piece = this.lastPiece;
         boolean capture = boardRep[destFileIndx][destRankIndx] != '.';
 
         boardRep[origFileIndx][origRankIndx] = '.';
         boardRep[destFileIndx][destRankIndx] = piece;
-        this.board = fenBoard(boardRep);
+        this.board = FENUtils.fenBoard(boardRep);
 
         String castling = this.castling;
         if(!castling.equals("-")) {
@@ -99,56 +86,13 @@ public class GameState {
         this.fullMoves = fullMove;
     }
 
-    public char[][] parseBoard(String fenBoard) {
-        char[][] board = new char[8][8];
-        String[] ranks = fenBoard.split("/");
-        for(int i = 0; i < ranks.length; i++) {
-            int j = 0;
-            for(char pce : ranks[i].toCharArray()) {
-                if(Character.isDigit(pce)) {
-                    for(int k = 0; k < (pce - '0'); k++) {
-                        board[j++][i] = '.';
-                    }
-                } else {
-                    board[j++][i] = pce;
-                }
-            }
-        }
-        return board;
-    }
-
-    public String fenBoard(char[][] board) {
-        ArrayList<String> fenBoard = new ArrayList<>();
-        int empty = 0;
-        for(int rank = 0; rank < 8; rank++) {
-            for(int file = 0; file < 8; file++) {
-                if(board[file][rank] == '.') empty++;
-                else {
-                    if(empty > 0) {
-                        fenBoard.add(String.valueOf(empty));
-                        empty = 0;
-                    }
-                    fenBoard.add(String.valueOf(board[file][rank]));
-                }
-            }
-            if(empty > 0) {
-                fenBoard.add(String.valueOf(empty));
-                empty = 0;
-            }
-            fenBoard.add("/");
-        }
-        fenBoard.removeLast();
-        return String.join("", fenBoard);
-
-    }
-
     public boolean confirmValidMove(Move move) {
         boolean validMove = true;
         char piece = move.getPiece();
         char[] origin = move.getOrigin().toCharArray();
         char[] dest = move.getDestination().toCharArray();
 
-        char[][] board = parseBoard(this.board);
+        char[][] board = FENUtils.parseBoard(this.board);
 
         if (origin[0] < 'a' || origin[0] > 'h' ||
                 origin[1] < '1' || origin[1] > '8') {
