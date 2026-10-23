@@ -1,11 +1,19 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.function.Supplier;
+
 public class Framework {
     long[][] pieces;
     long[] occupancy;
+    String whiteKingTile;
+    String blackKingTile;
 
     public Framework() {
         pieces = new long[2][6];
         occupancy = new long[3];
         initBitmaps();
+        whiteKingTile = "e1";
+        blackKingTile = "e8";
     }
 
     public void initBitmaps() {
@@ -30,7 +38,7 @@ public class Framework {
     }
 
     public boolean isValidMove(Move move) {
-        char piece = move.getPiece();
+        int piece = move.getIntPiece();
         String orig = move.getOrigin();
         String dest = move.getDestination();
         char color = move.getColor();
@@ -38,7 +46,8 @@ public class Framework {
 
         if(isInvalidSquare(orig) || isInvalidSquare(dest)) return false;
         if(getColor(dest) == color) return false;
-        if(inCheck() || inCheck(move)) return false;
+        if(!getMoves(piece, orig).contains(dest)) return false;
+        if(inCheck(color) || simulateMove(move, () -> this.inCheck(color))) return false;
         return true;
     }
 
@@ -57,7 +66,31 @@ public class Framework {
         else return '-';
     }
 
-    public boolean inCheck() {
+    public boolean inCheck(char color) {
+        String kingTile = getKingTile();
+        HashMap<String, Integer> enemyTiles = getEnemyTiles(color);
+        char enemyColor = color == 'w' ? 'b':'w';
+        enemyTiles.forEach((square, piece) -> {
+            if(getMoves(piece, square).contains(kingTile)) return true;
+        });
+        return false;
+    }
 
+    public <T> T simulateMove(Move move, Supplier<T> method) {
+        int enemyPiece = getPiece(move.getDestination());
+        String orig = move.getOrigin();
+        String dest = move.getDestination();
+
+        movePiece(orig, dest);
+
+        try{
+            return method.get();
+        } finally {
+            undoMove(orig, dest, enemyPiece);
+        }
+    }
+
+    public String getKingTile(char color) {
+        return color == 'w' ? whiteKingTile : blackKingTile;
     }
 }
