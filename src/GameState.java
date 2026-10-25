@@ -34,13 +34,13 @@ public class GameState {
     public ArrayList<String> getHistory() {return history;}
 
     public void addMove(Move move) {
-        if(!framework.isValidMove(move)) {
+        if(!framework.isValidMove(move, turn=='w'?0:1)) {
             throw new IllegalArgumentException("NOT A VALID MOVE");
         }
+        framework.makeMove(move);
         this.history.add(move.getOrigin() + move.getDestination());
         this.turn = this.turn == 'w' ? 'b' : 'w';
         this.lastPiece = move.getPiece();
-        framework.makeMove(move);
         updateFEN();
     }
 

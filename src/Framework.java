@@ -9,11 +9,15 @@ public class Framework {
     int whiteKingTile;
     int blackKingTile;
 
+    int[] kingRookMoved = {0,0};
+    int[] queenRookMoved = {0,0};
+    int[] kingMoved = {0,0};
+
     public Framework() {
         pieces = new long[2][6];
         occupancy = new long[3];
         initBitmaps();
-        whiteKingTile = 3;
+        whiteKingTile = 4;
         blackKingTile = 60;
     }
 
@@ -37,13 +41,13 @@ public class Framework {
     }
 
 
-    public boolean isValidMove(Move move) {
+    public boolean isValidMove(Move move, int turn) {
         int piece = move.getIntPiece();
         int orig = SQRUtils.toIndex(move.getOrigin());
         int dest = SQRUtils.toIndex(move.getDestination());
         int color = move.getColor()=='w'?0:1;
 
-
+        if(turn != color) return false;
         if((orig < 0 || orig > 63) || (dest < 0 || dest > 63)) return false;
         if(getColor(dest) == color) return false;
         if(!getMoves(piece, orig, color, false).contains(dest)) return false;
@@ -52,7 +56,20 @@ public class Framework {
     }
 
     public void makeMove(Move move) {
+        int color = move.getColor() == 'w'? 0:1;
+        if(move.getCastling()) {
+            movePiece(SQRUtils.toIndex(move.getCastlingRook()), SQRUtils.toIndex(move.getCastlingRookDest()));
+        }
         movePiece(SQRUtils.toIndex(move.getOrigin()), SQRUtils.toIndex(move.getDestination()));
+        if(move.getIntPiece() == 5) {
+            kingMoved[color] = 1;
+            if(color == 0) whiteKingTile = SQRUtils.toIndex(move.getDestination());
+            else blackKingTile = SQRUtils.toIndex(move.getDestination());
+        }
+        else if(move.getIntPiece() == 3) {
+            if(SQRUtils.toIndex(move.getOrigin())%8 == 7) queenRookMoved[color] = 1;
+            else if(SQRUtils.toIndex(move.getOrigin())%8 == 0) kingRookMoved[color] = 1;
+        }
     }
 
 
@@ -247,6 +264,14 @@ public class Framework {
         }
         if((occupancy[color] & (1L<<(sqr+8))) == 0 && !simulateMove(sqr, (sqr+8), () -> inCheck(color))) moves.add(sqr+8);
         if((occupancy[color] & (1L<<(sqr-8))) == 0 && !simulateMove(sqr, (sqr-8), () -> inCheck(color))) moves.add(sqr-8);
+        if(kingMoved[color] == 0 && (occupancy[2] & (1L<<(sqr+1))) == 0 && (occupancy[2] & (1L<<(sqr+2))) == 0
+                && !simulateMove(sqr, (sqr+1), () -> inCheck(color)) && !simulateMove(sqr, (sqr+2), () -> inCheck(color)) && kingRookMoved[color] == 0) {
+            moves.add(sqr+2);
+        }
+        if(kingMoved[color] == 0 && (occupancy[2] & (1L<<(sqr-1))) == 0 && (occupancy[2] & (1L<<(sqr-2))) == 0 && (occupancy[2] & (1L<<(sqr-3))) == 0
+                && !simulateMove(sqr, (sqr-1), () -> inCheck(color)) && !simulateMove(sqr, (sqr-2), () -> inCheck(color)) && queenRookMoved[color] == 0) {
+            moves.add(sqr-2);
+        }
         return moves;
     }
     private ArrayList<Integer> getSimKingMoves(int sqr, int color) {
