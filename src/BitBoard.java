@@ -3,6 +3,7 @@ public class BitBoard {
     long[] occupancy;
     int whiteKingTile;
     int blackKingTile;
+    int enPassant;
 
     boolean[] kingRookMoved = {false, false};
     boolean[] queenRookMoved = {false, false};
@@ -14,6 +15,7 @@ public class BitBoard {
         initBitmaps();
         whiteKingTile = 4;
         blackKingTile = 60;
+        enPassant = -1;
     }
 
     private void initBitmaps() {
@@ -68,6 +70,13 @@ public class BitBoard {
 
     public void movePiece(int orig, int dest) {
         int piece = getPiece(orig);
+
+        enPassant = -1;
+        if(piece == 0) {
+            if(dest-orig >= 16) enPassant = orig + 8;
+            else if (dest-orig <= 16) enPassant = orig - 8;
+        }
+
         setPiece(dest, piece, getColor(orig));
         setPiece(orig, -1, -1);
     }
