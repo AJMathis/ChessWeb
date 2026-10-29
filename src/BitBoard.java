@@ -102,4 +102,14 @@ public class BitBoard {
     public int getKingTile(int color) {
         return color == 0 ? whiteKingTile : blackKingTile;
     }
+
+    public boolean freeSqr(int sqr) {
+        return (this.occupancy[2] & (1L << (sqr))) == 0;
+    }
+    public boolean filledSqr(int sqr, int color) {
+        return (this.occupancy[color] & (1L << (sqr))) == 1;
+    }
+    public boolean enPassantOnSqr(int sqr) {
+        return this.enPassant == sqr;
+    }
 }

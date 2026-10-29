@@ -88,22 +88,19 @@ public class Framework {
         ArrayList<Integer> moves = new ArrayList<>();
         if(color == 0) {
             if(sqr/8 == 1) {
-                if((sqr+16) <= 63 && (board.occupancy[2] & (1L<<(sqr + 8))) == 0 && (board.occupancy[2] & (1L<<(sqr + 16))) == 0) moves.add(sqr+16);
+                if((sqr+16) <= 63 && board.freeSqr(sqr+8) && board.freeSqr(sqr+16)) moves.add(sqr+16);
             }
-            if((sqr+8) <= 63 && (board.occupancy[2] & (1L<<(sqr + 8))) == 0) moves.add(sqr+8);
-            if((sqr+7) <= 63 && ((board.occupancy[color^1] & (1L<<(sqr + 7))) != 0 || board.enPassant == (1<<(sqr+7)))) moves.add(sqr+7);
-            if((sqr+9) <= 63 && ((board.occupancy[color^1] & (1L<<(sqr + 9))) != 0 || board.enPassant == (1<<(sqr+9)))) moves.add(sqr+9);
+            if((sqr+8) <= 63 && board.freeSqr(sqr+8)) moves.add(sqr+8);
+            if((sqr+7) <= 63 && (board.filledSqr(sqr+7, color^1) || board.enPassantOnSqr(sqr+7))) moves.add(sqr+7);
+            if((sqr+9) <= 63 && (board.filledSqr(sqr+9, color^1) || board.enPassantOnSqr(sqr+9))) moves.add(sqr+9);
         } else {
-            if(sqr/8 == 6 && color==1) {
-                if ((sqr - 16) <= 63 && (board.occupancy[2] & (1L << (sqr - 8))) == 0 && (board.occupancy[2] & (1L << (sqr - 16))) == 0)
-                    moves.add(sqr - 16);
+            if(sqr/8 == 6) {
+                if ((sqr-16) <= 63 && board.freeSqr(sqr-8) && board.freeSqr(sqr-16)) moves.add(sqr-16);
             }
-            if((sqr-8) >= 0 && ((board.occupancy[2] & (1L<<(sqr - 8))) == 0)) moves.add(sqr+8);
-            if((sqr-7) >= 0 && ((board.occupancy[color^1] & (1L<<(sqr - 7))) != 0 || board.enPassant == (1<<(sqr-7)))) moves.add(sqr-7);
-            if((sqr-9) >= 0 && ((board.occupancy[color^1] & (1L<<(sqr - 9))) != 0 || board.enPassant == (1<<(sqr-9)))) moves.add(sqr-9);
+            if((sqr-8) >= 0 && board.freeSqr(sqr-8)) moves.add(sqr+8);
+            if((sqr-7) >= 0 && (board.filledSqr(sqr-7, color^1) || board.enPassantOnSqr(sqr-7))) moves.add(sqr-7);
+            if((sqr-9) >= 0 && (board.filledSqr(sqr-9, color^1) || board.enPassantOnSqr(sqr-9))) moves.add(sqr-9);
         }
-
-        //ADD En PASSANT
         return moves;
     }
     private ArrayList<Integer> getKnightMoves(int sqr, int color) {
