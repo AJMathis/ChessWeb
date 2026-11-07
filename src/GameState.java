@@ -1,4 +1,3 @@
-import java.awt.*;
 import java.util.ArrayList;
 
 public class GameState {
@@ -89,6 +88,10 @@ public class GameState {
         int fullMove = this.fullMoves;
         if (this.turn == 'w') fullMove++;
         this.fullMoves = fullMove;
+    }
+
+    public boolean gameOver(){
+        return framework.gameOver();
     }
 
 }

@@ -248,5 +248,9 @@ public class Framework {
         return moves;
     }
 
-
+    public boolean gameOver() {
+        boolean over = (inCheck(0) && getKingMoves(board.whiteKingTile, 0).isEmpty());
+        over |= (inCheck(1) && getKingMoves(board.blackKingTile, 1).isEmpty());
+        return over;
+    }
 }
