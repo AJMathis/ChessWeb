@@ -94,4 +94,9 @@ public class GameState {
         return framework.gameOver();
     }
 
+    public ArrayList<Move> getAllMoves() {
+        int color = this.turn == 'w' ? 0 : 1;
+        return framework.getAllMoves(color);
+    }
+
 }

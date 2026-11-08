@@ -35,8 +35,8 @@ public class ChessEngine {
         }
     }
 
-    private double evaluation(GameState future) {
-        return GameState.getEval();
+    private double evaluation(GameState game) {
+        return game.getEval();
     }
 
     private void simulateMove(Move move) {

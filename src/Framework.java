@@ -253,4 +253,24 @@ public class Framework {
         over |= (inCheck(1) && getKingMoves(board.blackKingTile, 1).isEmpty());
         return over;
     }
+
+    public ArrayList<Move> getAllMoves(int color) {
+        ArrayList<Move> moves = new ArrayList<>();
+        ArrayList<Integer> pieceMoves = new ArrayList<>();
+
+        long pieces = board.occupancy[color];
+        int sqr = 0;
+        while(pieces > 0) {
+            if((pieces & 0x1L) == 1) {
+                int piece = board.getPiece(sqr);
+                pieceMoves = getMoves(piece, sqr, color, true);
+                for(int move : pieceMoves) {
+                    moves.add(new Move(piece, color, sqr, move));
+                }
+            }
+            sqr++;
+            pieces >>= 0x1L;
+        }
+        return moves;
+    }
 }

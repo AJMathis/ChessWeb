@@ -26,7 +26,9 @@ public class Move {
             }
         }
     }
-
+    public Move(int piece, int color, int origin, int destination) {
+        this(PieceUtils.toChar(piece, color), SQRUtils.toString(origin), SQRUtils.toString(destination));
+    }
     public String getDestination() {return destination;}
 
     public String getOrigin() {return origin;}
