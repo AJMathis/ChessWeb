@@ -1,3 +1,7 @@
 - Fix eval to use attacking squares instead of movement squares
 - Add PieceUtils and BitBoard methods to be used more throughout
 - Fix MiniMax and add beta pruning
+- Fix undo move
+- Fix error in Tester (
+    - Remove isValid checks in moveGens
+)

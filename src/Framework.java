@@ -3,6 +3,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+
 public class Framework {
     BitBoard board;
 
@@ -22,6 +23,9 @@ public class Framework {
         if(!getMoves(piece, orig, color, false).contains(dest)) return false;
         if(simulateMove(orig, dest, () -> this.inCheck(color))) return false;
         return true;
+    }
+    public boolean isValidMove(int start, int end, int piece, int turn) {
+        return isValidMove(new Move(piece, turn, start, end), turn);
     }
 
     public void makeMove(Move move) {
@@ -101,6 +105,9 @@ public class Framework {
             if((sqr-7) >= 0 && (board.filledSqr(sqr-7, color^1) || board.enPassantOnSqr(sqr-7))) moves.add(sqr-7);
             if((sqr-9) >= 0 && (board.filledSqr(sqr-9, color^1) || board.enPassantOnSqr(sqr-9))) moves.add(sqr-9);
         }
+        for(int move: moves) {
+            if(!isValidMove(sqr, move,0,color)) moves.remove((Object)move);
+        }
         return moves;
     }
     private ArrayList<Integer> getKnightMoves(int sqr, int color) {
@@ -120,6 +127,9 @@ public class Framework {
                 if((sqr+10) <= 63 && (board.occupancy[color] & (1L<<(sqr + 15))) == 0) moves.add(sqr+6);
                 if((sqr-6) >= 0 && (board.occupancy[color] & (1L<<(sqr - 10))) == 0) moves.add(sqr-10);
             }
+        }
+        for(int move: moves) {
+            if(!isValidMove(sqr, move,1,color)) moves.remove((Object)move);
         }
         return moves;
     }
@@ -161,6 +171,9 @@ public class Framework {
                 if((board.occupancy[color^1] & (1L<<k)) != 0) break;
             } else {break;}
         }
+        for(int move: moves) {
+            if(!isValidMove(sqr, move,2,color)) moves.remove((Object)move);
+        }
         return moves;
     }
     private ArrayList<Integer> getRookMoves(int sqr, int color) {
@@ -199,12 +212,18 @@ public class Framework {
                 if((board.occupancy[color^1] & (1L<<k)) != 0) break;
             } else {break;}
         }
+        for(int move: moves) {
+            if(!isValidMove(sqr, move,3,color)) moves.remove((Object)move);
+        }
         return moves;
     }
     private ArrayList<Integer> getQueenMoves(int sqr, int color) {
         ArrayList<Integer> moves = new ArrayList<>();
         moves.addAll(getBishopMoves(sqr, color));
         moves.addAll(getRookMoves(sqr, color));
+        for(int move: moves) {
+            if(!isValidMove(sqr, move,4,color)) moves.remove((Object)move);
+        }
         return moves;
     }
     private ArrayList<Integer> getKingMoves(int sqr, int color) {
@@ -228,6 +247,9 @@ public class Framework {
         if(board.kingMoved[color] == false && (board.occupancy[2] & (1L<<(sqr-1))) == 0 && (board.occupancy[2] & (1L<<(sqr-2))) == 0 && (board.occupancy[2] & (1L<<(sqr-3))) == 0
                 && !simulateMove(sqr, (sqr-1), () -> inCheck(color)) && !simulateMove(sqr, (sqr-2), () -> inCheck(color)) && board.queenRookMoved[color] == false) {
             moves.add(sqr-2);
+        }
+        for(int move: moves) {
+            if(!isValidMove(sqr, move,5,color)) moves.remove((Object)move);
         }
         return moves;
     }
@@ -260,7 +282,7 @@ public class Framework {
 
         long pieces = board.occupancy[color];
         int sqr = 0;
-        while(pieces > 0) {
+        while(pieces != 0) {
             if((pieces & 0x1L) == 1) {
                 int piece = board.getPiece(sqr);
                 pieceMoves = getMoves(piece, sqr, color, true);
@@ -269,7 +291,7 @@ public class Framework {
                 }
             }
             sqr++;
-            pieces >>= 0x1L;
+            pieces >>>= 0x1L;
         }
         return moves;
     }

@@ -1,11 +1,32 @@
 public class ChessEngine {
     GameState gameState;
     GameState future;
-    public ChessEngine(GameState gameState) { this.gameState = gameState;
+    int depth;
+
+    public ChessEngine(GameState gameState, int depth) {
+        this.gameState = gameState;
+        this.depth = depth;
     }
     public void makeMove() {
         Move move = bestMove();
         gameState.addMove(move);
+    }
+
+    public Move bestMove() {
+        Move bestMove = null;
+        double bestEval = Double.NEGATIVE_INFINITY;
+        future = this.gameState;
+        for(Move move : future.getAllMoves()) {
+            System.out.println(move.toString() + " turn=" + future.turn);
+            future.addMove(move);
+            double eval = minimax(this.depth, false);
+            if(bestMove == null || eval > bestEval) {
+                bestMove = move;
+                bestEval = eval;
+            }
+            future.undoMove(move);
+        }
+        return bestMove;
     }
 
     private double minimax(int depth, boolean maxPlayer) {

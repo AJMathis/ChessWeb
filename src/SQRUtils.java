@@ -6,7 +6,7 @@ public class SQRUtils {
     public static String toString(int index) {
         int rank = index / 8;
         int file = index % 8;
-        return (String.valueOf((char)(rank + '1') + ((char)(file + 'a'))));
+        return (String.valueOf((char)(file + 'a')) + String.valueOf((char)(rank + '1')));
     }
 
 }

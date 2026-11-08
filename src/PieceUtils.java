@@ -9,7 +9,7 @@ public class PieceUtils {
             case 5 -> 'k';
             default -> 'p';
         };
-        if(color == 1) charPiece-=32;
+        if(color == 0) charPiece-=32;
         return charPiece;
     }
 }
