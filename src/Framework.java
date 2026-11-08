@@ -273,4 +273,37 @@ public class Framework {
         }
         return moves;
     }
+    public void undoMove(Move move) {
+        int orig = SQRUtils.toIndex(move.getOrigin());
+        int dest = SQRUtils.toIndex(move.getDestination());
+        int piece = move.getIntPiece();
+    }
+    public double getPieceEval() {
+        double eval = 0.0;
+        for(int i = 0; i < 2; i++) {
+            int mult = (i == 0 ? 1 : -1);
+            for(int j = 0; j < 6; j++) {
+                long pieces = board.pieces[i][j];
+                int pieceCount = switch(j) {
+                    case 1,2 -> 3;
+                    case 3 -> 5;
+                    case 4 -> 9;
+                    case 5 -> 10000;
+                    default -> 1;
+                };
+                while(pieces > 0) {
+                    if((pieces & 0x1L) == 1) {
+                        eval += (double)(mult * pieceCount);
+                    }
+                    pieces >>= 0x1;
+                }
+            }
+        }
+        return eval;
+    }
+    public double getLocationEval() {
+        double eval = (0.25 * getAllMoves(0).size());
+        eval -= (0.25 * getAllMoves(1).size());
+        return eval;
+    }
 }

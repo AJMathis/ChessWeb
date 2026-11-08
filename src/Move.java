@@ -53,4 +53,8 @@ public class Move {
     public String getCastlingRookDest() {return castlingDest;}
 
     public String getCastlingRook() {return castlingRook;}
+
+    public String toString(){
+        return (this.origin + this.destination);
+    }
 }

@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class GameState {
     Framework framework;
 
-    ArrayList<String> history;
+    ArrayList<Move> history;
     char lastPiece;
     String board;
     char turn;
@@ -30,21 +30,27 @@ public class GameState {
                 this.enPassant + " " + this.halfMoves + " " + this.fullMoves;
     }
 
-    public ArrayList<String> getHistory() {return history;}
+    public ArrayList<String> getHistory() {
+        ArrayList<String> strHistory = new ArrayList<>();
+        for(Move move : this.history) {
+            strHistory.add(move.toString());
+        }
+        return strHistory;
+    }
 
     public void addMove(Move move) {
         if(!framework.isValidMove(move, turn=='w'?0:1)) {
             throw new IllegalArgumentException("NOT A VALID MOVE");
         }
         framework.makeMove(move);
-        this.history.add(move.getOrigin() + move.getDestination());
+        this.history.add(move);
         this.turn = this.turn == 'w' ? 'b' : 'w';
         this.lastPiece = move.getPiece();
         updateFEN();
     }
 
     public void updateFEN() {
-        char[] moves = history.getLast().toCharArray();
+        char[] moves = history.getLast().toString().toCharArray();
         int destFileInx = (moves[2] - 'a');
         int destRankInx = (moves[3] - '1');
         int origFileInx = (moves[0] - 'a');
@@ -99,4 +105,15 @@ public class GameState {
         return framework.getAllMoves(color);
     }
 
+    public double getEval() {
+        double eval = framework.getPieceEval();
+        eval += framework.getLocationEval();
+        return eval;
+    }
+
+    public void undoMove(Move move) {
+        if(!move.equals(history.getLast())) throw new IllegalArgumentException("CANNOT REVERT MOVE PRIOR TO LAST MOVE");
+        framework.undoMove(move);
+        history.removeLast();
+    }
 }
