@@ -29,4 +29,5 @@ bin/
 ### Mac OS ###
 .DS_Store
 
-!**/src/todo.txt
+./src/todo.txt
+/src/todo.txt
