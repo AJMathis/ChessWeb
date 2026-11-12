@@ -1,9 +1,12 @@
+import java.util.Arrays;
+
 public class BitBoard {
     long[][] pieces;
     long[] occupancy;
     int whiteKingTile;
     int blackKingTile;
     int enPassant;
+    int pastEnPassant;
 
     boolean[] kingRookMoved = {false, false};
     boolean[] queenRookMoved = {false, false};
@@ -16,20 +19,40 @@ public class BitBoard {
         whiteKingTile = 4;
         blackKingTile = 60;
         enPassant = -1;
+        pastEnPassant = -1;
+    }
+    public BitBoard(BitBoard bitBoard) {
+        this.pieces = deepCopy(bitBoard.pieces);
+        this.occupancy = Arrays.copyOf(bitBoard.occupancy, 3);
+        whiteKingTile = bitBoard.whiteKingTile;
+        blackKingTile = bitBoard.blackKingTile;
+        enPassant = bitBoard.enPassant;
+        kingMoved = Arrays.copyOf(bitBoard.kingMoved, 2);
+        kingRookMoved = Arrays.copyOf(bitBoard.kingRookMoved, 2);
+        queenRookMoved = Arrays.copyOf(bitBoard.queenRookMoved, 2);
+        pastEnPassant = bitBoard.pastEnPassant;
+    }
+
+    private long[][] deepCopy(long[][] orig) {
+        long[][] copy = new long[2][6];
+        for(int i = 0; i < orig.length; i++) {
+            copy[i] = Arrays.copyOf(orig[i], orig[i].length);
+        }
+        return copy;
     }
 
     private void initBitmaps() {
         //Init White pieces
         pieces[0][0] = 0x000000000000FF00L;
-        pieces[0][1] = 0x0000000000000024L;
-        pieces[0][2] = 0x0000000000000042L;
+        pieces[0][1] = 0x0000000000000042L;
+        pieces[0][2] = 0x0000000000000024L;
         pieces[0][3] = 0x0000000000000018L;
         pieces[0][4] = 0x0000000000000080L;
         pieces[0][5] = 0x0000000000000001L;
         //Init Black Pieces
         pieces[1][0] = 0x00FF000000000000L;
-        pieces[1][1] = 0x2400000000000000L;
-        pieces[1][2] = 0x4200000000000000L;
+        pieces[1][1] = 0x4200000000000000L;
+        pieces[1][2] = 0x2400000000000000L;
         pieces[1][3] = 0x1800000000000000L;
         pieces[1][4] = 0x8000000000000000L;
         pieces[1][5] = 0x0100000000000000L;
@@ -71,6 +94,7 @@ public class BitBoard {
     public void movePiece(int orig, int dest) {
         int piece = getPiece(orig);
 
+        pastEnPassant = enPassant;
         enPassant = -1;
         if(piece == 0) {
             if(dest-orig >= 16) enPassant = orig + 8;
@@ -85,6 +109,7 @@ public class BitBoard {
         int color = getColor(dest);
         setPiece(orig, getPiece(dest), color);
         setPiece(dest, enemyPiece, color ^ 1);
+        enPassant = pastEnPassant;
     }
 
     private void setPiece(int sqr, int piece, int color) {

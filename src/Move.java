@@ -2,6 +2,7 @@ public class Move {
     String destination;
     String origin;
     char piece;
+    char enemyPiece = '-';
     char color;
     boolean castling;
     String castlingDest;
@@ -53,6 +54,9 @@ public class Move {
     public String getCastlingRookDest() {return castlingDest;}
 
     public String getCastlingRook() {return castlingRook;}
+
+    public void setEnemyPiece(char piece) {this.enemyPiece = piece;}
+    public char getEnemyPiece() {return this.enemyPiece;}
 
     public String toString(){
         return (this.origin + this.destination);

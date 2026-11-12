@@ -23,6 +23,17 @@ public class GameState {
         this.history = new ArrayList<>();
     }
 
+    public GameState(GameState gameState) {
+        this.framework = new Framework(gameState.framework);
+        this.board = gameState.board;
+        this.turn = gameState.turn;
+        this.castling = gameState.castling;
+        this.enPassant = gameState.enPassant;
+        this.halfMoves = gameState.halfMoves;
+        this.fullMoves = gameState.fullMoves;
+        this.history = new ArrayList<>(gameState.history);
+    }
+
     public int getTurn() {return turn;}
 
     public String getFEN() {
