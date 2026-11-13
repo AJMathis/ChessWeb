@@ -14,18 +14,18 @@ public class ChessEngine {
     public Move bestMove() {
         Move bestMove = null;
         double bestEval = Double.NEGATIVE_INFINITY;
-        GameState future = new GameState(gameState);
         for(Move move : gameState.getAllMoves()) {
-            System.out.println(move.toString() + " turn=" + future.turn);
-            future.addMove(move);
-            double eval = minimax(this.depth, false, future);
-            if(bestMove == null || eval > bestEval) {
+            System.out.print(move.toString() + ", ");
+            gameState.addMove(move, true);
+            double eval = minimax(this.depth, false, gameState);
+            if(bestMove == null || ((gameState.turn == 'w' && eval > bestEval) || (gameState.turn == 'b' && eval < bestEval))) {
                 bestMove = move;
                 bestEval = eval;
             }
-            future = new GameState(gameState);
+            gameState.undoLastMove();
             //future.undoMove(move);//WHAT IF FUTURE=GAMESTATE THIS STOPS THE NEED FOR UNDO MOVE
         }
+        System.out.println();
         return bestMove;
     }
 
@@ -37,19 +37,19 @@ public class ChessEngine {
         if(maxPlayer) {
             double maxEval = Double.NEGATIVE_INFINITY;
             for(Move move : currentState.getAllMoves()){
-                GameState nextState = new GameState(currentState);
-                nextState.addMove(move);
-                double eval = minimax(depth-1, false, nextState);
+                currentState.addMove(move, true);
+                double eval = minimax(depth-1, false, currentState);
                 maxEval = Math.max(eval, maxEval);
+                currentState.undoLastMove();
             }
             return maxEval;
         } else {
             double minEval = Double.POSITIVE_INFINITY;
             for(Move move : currentState.getAllMoves()){
-                GameState nextState = new GameState(currentState);
-                nextState.addMove(move);
-                double eval = minimax(depth-1, true, nextState);
+                currentState.addMove(move, true);
+                double eval = minimax(depth-1, true, currentState);
                 minEval = Math.min(eval, minEval);
+                currentState.undoLastMove();
             }
             return minEval;
         }

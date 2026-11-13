@@ -15,7 +15,7 @@ public class ChessTester {
     }
     public static void testEngineResponse() {
         GameState state = new GameState();
-        ChessEngine engine = new ChessEngine(state, 4);
+        ChessEngine engine = new ChessEngine(state, 3);
         boolean valid = true;
 
         valid &= (state.getFEN().equals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));

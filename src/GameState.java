@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 
 public class GameState {
     Framework framework;
@@ -12,6 +14,8 @@ public class GameState {
     int halfMoves;
     int fullMoves;
 
+    Stack<SavedMetadata> pastMoves;
+
     public GameState() {
         framework = new Framework();
         this.board = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
@@ -21,6 +25,8 @@ public class GameState {
         this.halfMoves = 0;
         this.fullMoves = 1;
         this.history = new ArrayList<>();
+
+        pastMoves = new Stack<SavedMetadata>();
     }
 
     public GameState(GameState gameState) {
@@ -48,16 +54,22 @@ public class GameState {
         }
         return strHistory;
     }
-
-    public void addMove(Move move) {
+    public void addMove(Move move) {addMove(move, false); }
+    public void addMove(Move move, boolean save) {
         if(!framework.isValidMove(move, turn=='w'?0:1)) {
             throw new IllegalArgumentException("NOT A VALID MOVE");
         }
+
+        pastMoves.add(new SavedMetadata(new ArrayList<>(history), lastPiece, board, turn,
+                castling, enPassant, halfMoves, fullMoves));
+
         framework.makeMove(move);
-        this.history.add(move);
         this.turn = this.turn == 'w' ? 'b' : 'w';
         this.lastPiece = move.getPiece();
-        updateFEN();
+        if(!save) {
+            this.history.add(move);
+            updateFEN();
+        }
     }
 
     public void updateFEN() {
@@ -122,9 +134,16 @@ public class GameState {
         return eval;
     }
 
-    public void undoMove(Move move) {
-        if(!move.equals(history.getLast())) throw new IllegalArgumentException("CANNOT REVERT MOVE PRIOR TO LAST MOVE");
-        framework.undoMove(move);
-        history.removeLast();
+    public void undoLastMove() {
+        SavedMetadata metadata = pastMoves.pop();
+        this.history = metadata.history;
+        this.lastPiece = metadata.lastPiece;
+        this.board = metadata.board;
+        this.turn = metadata.turn;
+        this.castling = metadata.castling;
+        this.enPassant = metadata.enPassant;
+        this.halfMoves = metadata.halfMoves;
+        this.fullMoves = metadata.fullMoves;
+        framework.undoLastMove();
     }
 }

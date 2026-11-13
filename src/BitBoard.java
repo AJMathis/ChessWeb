@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.Stack;
 
 public class BitBoard {
     long[][] pieces;
@@ -6,11 +7,11 @@ public class BitBoard {
     int whiteKingTile;
     int blackKingTile;
     int enPassant;
-    int pastEnPassant;
-
     boolean[] kingRookMoved = {false, false};
     boolean[] queenRookMoved = {false, false};
     boolean[] kingMoved = {false, false};
+
+    Stack<SavedState> pastMoves;
 
     public BitBoard() {
         pieces = new long[2][6];
@@ -19,7 +20,7 @@ public class BitBoard {
         whiteKingTile = 4;
         blackKingTile = 60;
         enPassant = -1;
-        pastEnPassant = -1;
+        pastMoves = new Stack<SavedState>();
     }
     public BitBoard(BitBoard bitBoard) {
         this.pieces = deepCopy(bitBoard.pieces);
@@ -30,7 +31,6 @@ public class BitBoard {
         kingMoved = Arrays.copyOf(bitBoard.kingMoved, 2);
         kingRookMoved = Arrays.copyOf(bitBoard.kingRookMoved, 2);
         queenRookMoved = Arrays.copyOf(bitBoard.queenRookMoved, 2);
-        pastEnPassant = bitBoard.pastEnPassant;
     }
 
     private long[][] deepCopy(long[][] orig) {
@@ -92,10 +92,10 @@ public class BitBoard {
     }
 
     public void movePiece(int orig, int dest) {
-        int piece = getPiece(orig);
+        pastMoves.add(new SavedState(deepCopy(pieces), Arrays.copyOf(occupancy, 3), whiteKingTile, blackKingTile,
+                enPassant, Arrays.copyOf(kingRookMoved,2), Arrays.copyOf(queenRookMoved,2),Arrays.copyOf(kingMoved,2)));
 
-        pastEnPassant = enPassant;
-        enPassant = -1;
+        int piece = getPiece(orig);
         if(piece == 0) {
             if(dest-orig >= 16) enPassant = orig + 8;
             else if (dest-orig <= 16) enPassant = orig - 8;
@@ -105,11 +105,17 @@ public class BitBoard {
         setPiece(orig, -1, -1);
     }
 
-    public void undoMove(int orig, int dest, int enemyPiece) {
-        int color = getColor(dest);
-        setPiece(orig, getPiece(dest), color);
-        setPiece(dest, enemyPiece, color ^ 1);
-        enPassant = pastEnPassant;
+    public void undoLastMove() {
+        SavedState state = pastMoves.pop();
+
+        enPassant = state.enPassant;
+        pieces = state.pieces;
+        blackKingTile = state.blackKingTile;
+        whiteKingTile = state.whiteKingTile;
+        occupancy = state.occupancy;
+        kingRookMoved = state.kingRookMoved;
+        queenRookMoved = state.queenRookMoved;
+        kingMoved = state.kingMoved;
     }
 
     private void setPiece(int sqr, int piece, int color) {

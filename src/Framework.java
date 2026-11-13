@@ -23,7 +23,7 @@ public class Framework {
         if((orig < 0 || orig > 63) || (dest < 0 || dest > 63)) return false;
         if(board.getColor(dest) == color) return false;
         if(!getMoves(piece, orig, color, false).contains(dest)) return false;
-        if(simulateMove(orig, dest, color, () -> this.inCheck(color))) return false;
+        if(simulateMove(orig, dest, () -> this.inCheck(color))) return false;
         return true;
     }
     public boolean isValidMove(int start, int end, int piece, int turn) {
@@ -68,15 +68,13 @@ public class Framework {
         return false;
     }
 
-    private <T> T simulateMove(int orig, int dest, int color, Supplier<T> method) {
+    private <T> T simulateMove(int orig, int dest, Supplier<T> method) {
         int enemyPiece = board.getPiece(dest);
-
-        int kingSqr = color == 0 ? board.whiteKingTile: board.blackKingTile;
         board.movePiece(orig, dest);
         try{
             return method.get();
         } finally {
-            board.undoMove(orig, dest, enemyPiece);
+            board.undoLastMove();
         }
     }
 
@@ -104,7 +102,7 @@ public class Framework {
             if(sqr/8 == 6) {
                 if ((sqr-16) <= 63 && board.freeSqr(sqr-8) && board.freeSqr(sqr-16)) moves.add(sqr-16);
             }
-            if((sqr-8) >= 0 && board.freeSqr(sqr-8)) moves.add(sqr+8);
+            if((sqr-8) >= 0 && board.freeSqr(sqr-8)) moves.add(sqr-8);
             if((sqr-7) >= 0 && (board.filledSqr(sqr-7, color^1) || board.enPassantOnSqr(sqr-7))) moves.add(sqr-7);
             if((sqr-9) >= 0 && (board.filledSqr(sqr-9, color^1) || board.enPassantOnSqr(sqr-9))) moves.add(sqr-9);
         }
@@ -281,15 +279,8 @@ public class Framework {
         moves.removeIf(move -> !isValidMove(move, color));
         return moves;
     }
-    public void undoMove(Move move) {
-        int orig = SQRUtils.toIndex(move.getOrigin());
-        int dest = SQRUtils.toIndex(move.getDestination());
-        int piece = move.getIntPiece();
-
-        if (move.castling) {
-            board.movePiece(SQRUtils.toIndex(move.getCastlingRookDest()), SQRUtils.toIndex(move.getCastlingRook()));
-        }
-        board.undoMove(orig, dest, move.getEnemyPiece());
+    public void undoLastMove() {
+        board.undoLastMove();
     }
     public double getPieceEval() {
         double eval = 0.0;
