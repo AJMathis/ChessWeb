@@ -40,19 +40,33 @@ public class Board {
             occupancy[0] |= pieces[0][i];
             occupancy[1] |= pieces[1][i];
         }
-        occupancy[3] = occupancy[0] | occupancy[1];
+        occupancy[2] = occupancy[0] | occupancy[1];
     }
 
     //Public Methods
     public void move(int from, int to) {
+        move(from, to, false, false);
+    }
+    public void move(int from, int to, boolean passant, boolean castling) {
         int color = getColor(from);
         int piece = getPiece(from);
 
         clearSqr(from, piece, color);
-        clearSqr(to, getPiece(to), color^1);
-        setSqr(to, piece, color);
+        if(passant) {
+            int displace = color==WHITE?8:-8;
+            clearSqr(to+displace, PAWN, color^1);
+        } else {
+            clearSqr(to, getPiece(to), color ^ 1);
+        }
 
-        updateOcc();
+        if(castling) {
+            int file = to>from?7:0;
+            int sqr = (getRank(from) * 8) + file;
+            clearSqr(sqr, ROOK, color);
+            setSqr(to+(file==7?1:-1), ROOK, color);
+        }
+
+        setSqr(to, piece, color);
     }
 
     public boolean isOccupied(int sqr, long occupancy) {
@@ -74,11 +88,15 @@ public class Board {
     }
 
     //SQR Editing
-    private void clearSqr(int sqr, int piece, int color) {
+    public void clearSqr(int sqr, int piece, int color) {
+        if(piece == NULL) return;
         pieces[color][piece] &= ~(1L<<sqr);
+        updateOcc();
     }
-    private void setSqr(int sqr, int piece, int color) {
+    public void setSqr(int sqr, int piece, int color) {
+        if(piece == NULL) return;
         pieces[color][piece] |= 1L<<sqr;
+        updateOcc();
     }
 
 
@@ -99,5 +117,8 @@ public class Board {
     }
     public int getRank(int sqr) {
         return sqr / 8;
+    }
+    public int getFile(int sqr) {
+        return sqr % 8;
     }
 }
