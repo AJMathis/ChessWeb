@@ -21,7 +21,7 @@ public class MoveGen {
 
     public MoveGen(){
         board = new Board();
-        playerTurn = 0;
+        playerTurn = WHITE;
         enPassant = new Stack<>();
         enPassant.add(NULL);
         takenPieces = new Stack<>();
@@ -36,14 +36,26 @@ public class MoveGen {
     public void move(int from, int to, boolean check) {
         int color = board.getColor(from);
         int piece = board.getPiece(from);
-        if (color != playerTurn) throw new IllegalArgumentException();
+        if (check && color != playerTurn) throw new IllegalArgumentException();
         if(check && !validMove(from, to)) throw new IllegalStateException();
 
         boolean isPassant = false;
         int takenPiece = board.getPiece(to);
-        if(takenPiece==NULL && enPassant.peek()==to) {
+        if(takenPiece==NULL && enPassant.peek()==to && piece==PAWN) {
             takenPiece = PAWN;
             isPassant = true;
+        }
+        int rookMoving = rookMoved.peek();
+        if(takenPiece==ROOK) {
+            int rank = (color^1)==WHITE?0:7;
+            if((rookMoved.peek() & 3<<((color^1)*2)) != 3<<((color^1) * 2)) {
+                if(to==(rank*8) && (rookMoved.peek() & 1<<((color^1)*2)) == 0) {
+                    rookMoving |=  (1<<((color^1)*2));
+                }
+                if(to==(rank*8+7) && (rookMoved.peek() & 1<<(((color^1)*2)+1)) == 0) {
+                    rookMoving |= (1<<(((color^1)*2)+1));
+                }
+            }
         }
         boolean isCastling = false;
         if(piece==KING && (to==from+2 || to==from-2)) {
@@ -57,56 +69,61 @@ public class MoveGen {
             kingMoved.add(kingMoved.peek() | (1<<color));
         }
         if(piece==ROOK) {
-            int side = board.getFile(from)==0?0:1;
-            int displace = ((color*2) + side);
-            rookMoved.add(rookMoved.peek() | (1<<displace));
+            int file = board.getFile(from);
+            if(file == 0 || file == 7) {
+                int side = file == 0 ? 0 : 1;
+                int displace = ((color * 2) + side);
+                rookMoving |= ((1 << displace));
+            }
         }
 
+        rookMoved.add(rookMoving);
         takenPieces.add(takenPiece);
         board.move(from, to, isPassant, isCastling);
     }
-    private void undoMove(int from, int to) {
+    public void undoMove(int from, int to) {
         int color = board.getColor(to);
         int piece = board.getPiece(to);
-        if(color == playerTurn) throw new IllegalArgumentException();
 
         playerTurn ^= 1;
         enPassant.pop();
+        rookMoved.pop();
         if(piece==KING) {
             kingSqr[color] = from;
             kingMoved.pop();
         }
-        if(piece==ROOK) rookMoved.pop();
 
         board.move(to ,from);
         int taken = takenPieces.pop();
         if(taken != NULL ) {
             if(to==enPassant.peek()){
-                int displace = color==WHITE?8:-8;
+                int displace = color==WHITE?-8:8;
                 board.setSqr(to+displace, taken, color^1);
             } else {
                 board.setSqr(to, taken, color^1);
             }
         }
         if(piece == KING) {
+            int rank = color==WHITE?0:7;
             if(to == from+2) {
                 board.clearSqr(to-1, ROOK, color);
-                board.setSqr(7, ROOK, color);
+                board.setSqr((rank*8)+7, ROOK, color);
             } else if (to == from-2) {
                 board.clearSqr(to+1, ROOK, color);
-                board.setSqr(0, ROOK, color);
+                board.setSqr((rank*8), ROOK, color);
             }
         }
     }
 
-    public long getMoves(int sqr, int piece) {
+    public long getMoves(int sqr, boolean attacking) {
+        int piece = board.getPiece(sqr);
         return switch(piece) {
             case PAWN -> getPawnMoves(sqr);
             case KNIGHT -> getKnightMoves(sqr);
             case BISHOP -> getBishopMoves(sqr);
             case ROOK -> getRookMoves(sqr);
             case QUEEN -> getQueenMoves(sqr);
-            case KING -> getKingMoves(sqr);
+            case KING -> getKingMoves(sqr, attacking);
             default -> 0L;
         };
     }
@@ -122,11 +139,21 @@ public class MoveGen {
                 moves = board.setSqr(moves, sqr + (16 * multi), color);
             }
         }
-        if(sqr%8>0 && (board.isOccupied(sqr+(7* multi), color^1) || sqr+(7*multi) == enPassant.peek()) && board.onBoard(sqr+(7*multi))) {
-            moves = board.setSqr(moves, sqr+(7* multi), color);
+        if(sqr%8>0){
+            if(color == WHITE && (board.isOccupied(sqr+7, color^1) || sqr+7 == enPassant.peek()) && board.onBoard(sqr+7)) {
+                moves = board.setSqr(moves, sqr+7, color);
+            }
+            else if(color == BLACK && (board.isOccupied(sqr-9, color^1) || sqr-9 == enPassant.peek()) && board.onBoard(sqr-9)) {
+                moves = board.setSqr(moves, sqr-9, color);
+            }
         }
-        if(sqr%8<7 && (board.isOccupied(sqr+(9* multi), color^1) || sqr+(9*multi) == enPassant.peek()) && board.onBoard(sqr+(9*multi))){
-            moves = board.setSqr(moves, sqr+(9* multi), color);
+        if(sqr%8<7) {
+            if(color == WHITE && (board.isOccupied(sqr+9, color^1) || sqr+9 == enPassant.peek()) && board.onBoard(sqr+9)) {
+                moves = board.setSqr(moves, sqr+9, color);
+            }
+            else if(color==BLACK && (board.isOccupied(sqr-7, color^1) || sqr-7 == enPassant.peek()) && board.onBoard(sqr-7)) {
+                moves = board.setSqr(moves, sqr-7, color);
+            }
         }
         return moves;
     }
@@ -187,7 +214,7 @@ public class MoveGen {
 
         return moves;
     }
-    public long getKingMoves(int sqr) {
+    public long getKingMoves(int sqr, boolean attacking) {
         int color = board.getColor(sqr);
         long moves = 0L;
 
@@ -203,40 +230,52 @@ public class MoveGen {
             if(!board.isOccupied(sqr-1, color) && board.onBoard(sqr-1)) moves = board.setSqr(moves, sqr-1, color);
             if(!board.isOccupied(sqr+7, color) && board.onBoard(sqr+7)) moves = board.setSqr(moves, sqr+7, color);
         }
-        if((kingMoved.peek() & (1<<color)) == 0) {
+        if(!attacking && (kingMoved.peek() & (1<<color)) == 0) {
             int rookState = rookMoved.peek();
             if ((rookState & 3<<(color * 2)) != 3<<(color * 2)) {
-                if ((rookState & 1 << (color * 2)) == 0) {
+                if ((rookState & 2 << (color * 2)) == 0) {
                     boolean valid = true;
                     for(int i = 0; i <= 2; i++) {
-                        if(inCheck(sqr, sqr+i, color)) valid = false;
+                        if (i == 0) {
+                            if (inCheck(color)) valid = false;
+                        } else {
+                            if (board.isOccupied(sqr + i)) valid = false;
+                            else if (inCheck(sqr, sqr + i, color)) valid = false;
+                        }
                     }
                     if(valid) moves = board.setSqr(moves, sqr+2, color);
                 }
-                if ((rookState & 2 << (color * 2)) == 0) {
+                if ((rookState & 1 << (color * 2)) == 0) {
                     boolean valid = true;
                     for(int i = 0; i >= -2; i--) {
-                        if(inCheck(sqr, sqr+i, color)) valid = false;
+
+                        if (i == 0) {
+                            if (inCheck(color)) valid = false;
+                        } else {
+                            if (board.isOccupied(sqr + i)) valid = false;
+                            else if (inCheck(sqr, sqr + i, color)) valid = false;
+                        }
                     }
+                    if(board.isOccupied(sqr-3)) valid = false;
                     if(valid) moves = board.setSqr(moves, sqr-2, color);
                 }
             }
         }
         return moves;
     }
-    private long getAllMoves(int color) {
+    private long getAllMoves(int color, boolean attacking) {
         long moves = 0L;
 
         for(int i = 0; i < 64; i++) {
             if(board.isOccupied(i, color)) {
                 int piece = board.getPiece(i);
-                moves |= getMoves(i, piece);
+                moves |= getMoves(i, attacking);
             }
         }
         return moves;
     }
 
-    private long slidingMove(int sqr, int color, int x, int y) {
+    private long slidingMove(int sqr,  int color, int x, int y) {
         int displace = (y*8)+x;
         int currSqr = sqr+displace;
         long moves = 0L;
@@ -255,18 +294,23 @@ public class MoveGen {
         int color = board.getColor(from);
         if(piece == NULL) return false;
 
-        long moves = getMoves(from, piece);
+        long moves = getMoves(from, false);
         return board.isOccupied(to, moves) && !inCheck(from, to, color);
     }
-    private boolean inCheck (int from, int to, int color) {
+    public boolean inCheck (int from, int to, int color) {
 
         move(from, to, false);
 
-        long moves = getAllMoves(color^1);
+        long moves = getAllMoves(color^1, true);
         boolean valid = board.isOccupied(kingSqr[color], moves);
         undoMove(from, to);
         return valid;
     }
+    public boolean inCheck(int color) {
+        long moves = getAllMoves(color^1, true);
+        return board.isOccupied(kingSqr[color], moves);
+    }
+
 
     private int getEnPassant(int from, int to) {
         int piece = board.getPiece(from);
@@ -277,6 +321,10 @@ public class MoveGen {
             if(to == (from + (16 * multi))) return from + (8 * multi);
         }
         return NULL;
+    }
+
+    public String toString() {
+        return board.toString();
     }
 
 }

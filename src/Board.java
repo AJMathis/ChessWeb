@@ -53,7 +53,7 @@ public class Board {
 
         clearSqr(from, piece, color);
         if(passant) {
-            int displace = color==WHITE?8:-8;
+            int displace = color==WHITE?-8:8;
             clearSqr(to+displace, PAWN, color^1);
         } else {
             clearSqr(to, getPiece(to), color ^ 1);
@@ -63,7 +63,7 @@ public class Board {
             int file = to>from?7:0;
             int sqr = (getRank(from) * 8) + file;
             clearSqr(sqr, ROOK, color);
-            setSqr(to+(file==7?1:-1), ROOK, color);
+            setSqr(to+(file==7?-1:1), ROOK, color);
         }
 
         setSqr(to, piece, color);
@@ -73,7 +73,7 @@ public class Board {
         return ((1L<<sqr) & occupancy) != 0;
     }
     public boolean isOccupied(int sqr) {
-        return ((1L<<sqr) & this.occupancy[3]) != 0;
+        return ((1L<<sqr) & this.occupancy[2]) != 0;
     }
     public boolean isOccupied(int sqr, int color) {
         return ((1L<<sqr) & this.occupancy[color]) != 0;
@@ -120,5 +120,16 @@ public class Board {
     }
     public int getFile(int sqr) {
         return sqr % 8;
+    }
+
+    public String toString() {
+        StringBuilder str = new StringBuilder();
+        for(int i = 7; i >= 0; i--) {
+            for(int j = 0; j < 8; j++) {
+                str.append(String.valueOf(getPiece((i*8)+j)+1));
+            }
+            str.append("\n");
+        }
+        return str.toString();
     }
 }
